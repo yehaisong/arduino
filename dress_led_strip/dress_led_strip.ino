@@ -40,7 +40,7 @@ void setup() {
 void loop()  {
 
   
-    ledMode=5;
+    ledMode=0;
     
   
  switch (ledMode) {
