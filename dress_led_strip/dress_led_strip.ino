@@ -30,7 +30,7 @@ uint8_t myFavoriteColors[][3] = {{200,   100,   200},   // I've set this for pas
 
 
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(9600);
   //CircuitPlayground.begin();
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
   currentBlending = LINEARBLEND;
