@@ -1,7 +1,7 @@
 #include <FastLED.h>
 
 #define LED_PIN     6    //led strand is soldered to pin 6
-#define NUM_LEDS    10   // number of LEDs in my strand
+#define NUM_LEDS    15   // number of LEDs in my strand
 #define COLOR_ORDER GRB
 
 uint8_t brightness = 255;  //led strand brightness control
@@ -39,8 +39,14 @@ void setup() {
 
 void loop()  {
 
-  
-    ledMode=0;
+
+    if(Serial.available()>0)
+    {
+      
+      ledMode=Serial.parseInt();
+    }
+    
+    
     
   
  switch (ledMode) {
@@ -49,9 +55,13 @@ void loop()  {
        case 2: //soundreactive(); break; 
        case 3: currentPalette = OceanColors_p; rainbow(); break;                    
        case 4: currentPalette = LavaColors_p; rainbow(); break; 
-       case 5: currentPalette = RainbowStripeColors_p; rainbow(); break;    
+       case 5: currentPalette = RainbowStripeColors_p; rainbow(); break;
+       case 6: currentPalette = CloudColors_p; rainbow(); break;
+       case 7: currentPalette = ForestColors_p; rainbow(); break;
+       case 8: currentPalette = PartyColors_p; rainbow(); break;    
+       case 9: currentPalette = HeatColors_p; rainbow(); break; 
        case 99: clearpixels(); break;
-       
+       //CloudColors_p,LavaColors_p,OceanColors_p,ForestColors_p,RainbowColors_p,RainbowStripeColors_p,PartyColors_p,HeatColors_p
 }
 }
 
