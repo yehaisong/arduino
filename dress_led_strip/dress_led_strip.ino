@@ -1,4 +1,8 @@
 #include <FastLED.h>
+#include <Wire.h>
+#include <Adafruit_MMA8451.h>
+#include <Adafruit_Sensor.h>
+
 
 #define LED_PIN     6    //led strand is soldered to pin 6
 #define NUM_LEDS    15   // number of LEDs in my strand
@@ -14,6 +18,8 @@ CRGB leds[NUM_LEDS];  //I've set up different arrays for the neopixel strand and
 
 CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
+
+Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
 int ledMode = 0;       //Initial mode 
 
@@ -35,6 +41,19 @@ void setup() {
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
   currentBlending = LINEARBLEND;
   set_max_power_in_volts_and_milliamps(5, 500);               // FastLED 2.1 Power management set at 5V, 500m
+
+  Serial.println("Led strip");
+ 
+  if (! mma.begin()) {
+    Serial.println("Couldnt start");
+    while (1);
+  }
+  Serial.println("MMA8451 found!");
+  
+  mma.setRange(MMA8451_RANGE_2_G);
+  
+  Serial.print("Range = "); Serial.print(2 << mma.getRange());  
+  Serial.println("G");
 }
 
 void loop()  {
@@ -44,6 +63,7 @@ void loop()  {
     {
       
       ledMode=Serial.parseInt();
+      Serial.println("Led Mode: "+ledMode);
     }
     
     
@@ -51,7 +71,7 @@ void loop()  {
   
  switch (ledMode) {
        case 0: currentPalette = RainbowColors_p; rainbow(); break; 
-       case 1: //motion(); break;
+       case 1: motion(); break;
        case 2: //soundreactive(); break; 
        case 3: currentPalette = OceanColors_p; rainbow(); break;                    
        case 4: currentPalette = LavaColors_p; rainbow(); break; 
@@ -164,8 +184,26 @@ void FillLEDsFromPaletteColors( uint8_t colorIndex)
 //} // fastbracelet()
 
 
-//void motion() {
-//  
+void motion() {
+  
+  mma.read();
+  /* Get a new sensor event */ 
+  sensors_event_t event; 
+  mma.getEvent(&event);
+
+  if (abs(event.acceleration.x) > 5||abs(event.acceleration.z) > 5) {
+    Serial.print("Moving...");
+    //digitalWrite(led, HIGH);
+    //delay(2000);
+    //digitalWrite(led, LOW);
+    Serial.println("Twinkle!");
+    flashRandom(10, 1);  // first number is 'wait' delay, shorter num == shorter twinkle
+    flashRandom(10, 3);  // second number is how many neopixels to simultaneously light up
+    flashRandom(10, 2);
+  }
+
+
+  
 //  X = CircuitPlayground.motionX();
 //  Y = CircuitPlayground.motionY();
 //  Z = CircuitPlayground.motionZ();
@@ -198,47 +236,47 @@ void FillLEDsFromPaletteColors( uint8_t colorIndex)
 //    flashRandom(5, 3);  // second number is how many neopixels to simultaneously light up
 //    flashRandom(5, 2);
 //  }
-//}
+}
 
-//void flashRandom(int wait, uint8_t howmany) {
-//
-//  for(uint16_t i=0; i<howmany; i++) {
-//    // pick a random favorite color!
-//    int c = random(FAVCOLORS);
-//    int red = myFavoriteColors[c][0];
-//    int green = myFavoriteColors[c][1];
-//    int blue = myFavoriteColors[c][2]; 
-//
-//    // get a random pixel from the list
-//    int j = random(NUM_LEDS);
-//    //Serial.print("Lighting up "); Serial.println(j); 
-//    
-//    // now we will 'fade' it in 5 steps
-//    for (int x=0; x < 5; x++) {
-//      int r = red * (x+1); r /= 5;
-//      int g = green * (x+1); g /= 5;
-//      int b = blue * (x+1); b /= 5;
-//      
-//      leds[j].r = r;
-//      leds[j].g = g;
-//      leds[j].b = b;
-//      FastLED.show();
-//      //CircuitPlayground.setPixelColor(j, r, g, b);
-//      delay(wait);
-//    }
-//    // & fade out in 5 steps
-//    for (int x=5; x >= 0; x--) {
-//      int r = red * x; r /= 5;
-//      int g = green * x; g /= 5;
-//      int b = blue * x; b /= 5;
-//
-//      leds[j].r = r;
-//      leds[j].g = g;
-//      leds[j].b = b;
-//      FastLED.show(); 
-//      //CircuitPlayground.setPixelColor(j, r, g, b); 
-//      delay(wait);
-//    }
-//  }
-//  // LEDs will be off when done (they are faded to 0)
-//}
+void flashRandom(int wait, uint8_t howmany) {
+
+  for(uint16_t i=0; i<howmany; i++) {
+    // pick a random favorite color!
+    int c = random(FAVCOLORS);
+    int red = myFavoriteColors[c][0];
+    int green = myFavoriteColors[c][1];
+    int blue = myFavoriteColors[c][2]; 
+
+    // get a random pixel from the list
+    int j = random(NUM_LEDS);
+    //Serial.print("Lighting up "); Serial.println(j); 
+    
+    // now we will 'fade' it in 5 steps
+    for (int x=0; x < 5; x++) {
+      int r = red * (x+1); r /= 5;
+      int g = green * (x+1); g /= 5;
+      int b = blue * (x+1); b /= 5;
+      
+      leds[j].r = r;
+      leds[j].g = g;
+      leds[j].b = b;
+      FastLED.show();
+      //CircuitPlayground.setPixelColor(j, r, g, b);
+      delay(wait);
+    }
+    // & fade out in 5 steps
+    for (int x=5; x >= 0; x--) {
+      int r = red * x; r /= 5;
+      int g = green * x; g /= 5;
+      int b = blue * x; b /= 5;
+
+      leds[j].r = r;
+      leds[j].g = g;
+      leds[j].b = b;
+      FastLED.show(); 
+      //CircuitPlayground.setPixelColor(j, r, g, b); 
+      delay(wait);
+    }
+  }
+  // LEDs will be off when done (they are faded to 0)
+}
