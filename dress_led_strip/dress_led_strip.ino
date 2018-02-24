@@ -1,3 +1,4 @@
+
 #include <FastLED.h>
 #include <Wire.h>
 #include <Adafruit_MMA8451.h>
@@ -33,7 +34,7 @@ uint8_t myFavoriteColors[][3] = {{200,   100,   200},   // I've set this for pas
 // don't edit the line below
 #define FAVCOLORS sizeof(myFavoriteColors) / 3
 
-
+bool motiondetect=true;
 
 void setup() {
   Serial.begin(9600);
@@ -43,17 +44,21 @@ void setup() {
   set_max_power_in_volts_and_milliamps(5, 500);               // FastLED 2.1 Power management set at 5V, 500m
 
   Serial.println("Led strip");
- 
+
+//Check if there is a G sensor.
   if (! mma.begin()) {
     Serial.println("Couldnt start");
-    while (1);
+    motiondetect=false;
+    //while (1);
   }
-  Serial.println("MMA8451 found!");
-  
-  mma.setRange(MMA8451_RANGE_2_G);
-  
-  Serial.print("Range = "); Serial.print(2 << mma.getRange());  
-  Serial.println("G");
+  else{
+    Serial.println("MMA8451 found!");
+    
+    mma.setRange(MMA8451_RANGE_2_G);
+    
+    Serial.print("Range = "); Serial.print(2 << mma.getRange());  
+    Serial.println("G");
+  }
 }
 
 void loop()  {
@@ -185,21 +190,23 @@ void FillLEDsFromPaletteColors( uint8_t colorIndex)
 
 
 void motion() {
+  if(motiondetect){ 
+    mma.read();
+    /* Get a new sensor event */ 
+    sensors_event_t event; 
+    mma.getEvent(&event);
   
-  mma.read();
-  /* Get a new sensor event */ 
-  sensors_event_t event; 
-  mma.getEvent(&event);
-
-  if (abs(event.acceleration.x) > 5||abs(event.acceleration.z) > 5) {
-    Serial.print("Moving...");
-    //digitalWrite(led, HIGH);
-    //delay(2000);
-    //digitalWrite(led, LOW);
-    Serial.println("Twinkle!");
-    flashRandom(10, 1);  // first number is 'wait' delay, shorter num == shorter twinkle
-    flashRandom(10, 3);  // second number is how many neopixels to simultaneously light up
-    flashRandom(10, 2);
+    if (abs(event.acceleration.x) > 5||abs(event.acceleration.z) > 5) {
+      Serial.print("Moving...");
+      //digitalWrite(led, HIGH);
+      //delay(2000);
+      //digitalWrite(led, LOW);
+      Serial.println("Twinkle!");
+      flashRandom(10, 1);  // first number is 'wait' delay, shorter num == shorter twinkle
+      flashRandom(10, 3);  // second number is how many neopixels to simultaneously light up
+      flashRandom(10, 2);
+    }
+  
   }
 
 
